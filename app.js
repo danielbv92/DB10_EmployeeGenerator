@@ -7,121 +7,158 @@ const fs = require("fs");
 
 const OUTPUT_DIR = path.resolve(__dirname, "output");
 const render = require("./lib/htmlRenderer");
-const outputPath = path.join(OUTPUT_DIR, "team.html");
-
 
 
 let teamMembers = [];
-//function CreateManager()
-{
-    const questions = [
+
+const firstQuestion = {
+    type: 'list',
+    message: 'Do you wish to add a new member or generate a team?',
+    name: 'Add',
+    choices: ['Add new Member', 'Generate Team'],
+};
+
+const fileNameCreate = {
+    type: 'input',
+    message: 'Please enter a file name for your team',
+    name: 'fileName',
+};
+
+const Questions = {
+    Manager: [
         {
             type: 'input',
             message: 'Please enter your name',
-            name: 'name'
+            name: 'fileName',
         },
         {
             type: 'input',
             message: 'Please enter your id',
-            name: 'id'
+            name: 'id',
         },
         {
             type: 'input',
-            message: 'Please enter your email',
-            name: 'email'
+            message: 'Please enter your email address',
+            name: 'email',
         },
         {
             type: 'input',
-            message: 'Enter your office number',
-            name: 'officeNumber'
-        }
-    ];
-    inquirer.prompt(questions).then(function (response){
-        console.log(response);
-        const manager = new Manager(response.name,response.id,response.email,response.officeNumber);
-        teamMembers.push(manager);
-        CreateEmployee();
-    });
-}
+            message: 'Please enter your office number',
+            name: 'officeNumber',
+        },
+    ],
+    Engineer: [
+        {
+            type: 'input',
+            message: 'Please enter your name',
+            name: 'name',
+        },
+        {
+            type: 'input',
+            message: 'Please enter your id',
+            name: 'id',
+        },
+        {
+            type: 'input',
+            message: 'Enter your email address',
+            name: 'email',
+        },
+        {
+            type: 'input',
+            message: 'Enter your Github',
+            name: 'github',
+        },
+    ],
+    Intern: [
+        {
+            type: 'input',
+            message: 'Please enter your name',
+            name: 'name',
+        },
+        {
+            type: 'input',
+            message: 'Please enter your id',
+            name: 'id',
+        },
+        {
+            type: 'input',
+            message: 'Enter your email address',
+            name: 'email',
+        },
+        {
+            type: 'input',
+            message: 'Enter your school name',
+            name: 'school',
+        },
+    ],
+};
 
-function createEmployee(){
-    const createEmployee = [
-        {
-            type: 'list',
-            message: 'Select Type of Employee',
-            name: 'employeeType',
-            choices: ['Engineer', 'Intern', 'I do not wish to add anymore members.']
-        }
-    ];
-    inquirer.prompt(createEmployee).then(function (response){
-        console.log(response);
-        if (response.employeeType === "Engineer") {
-            CreateEngineer();
-        } else if (response.employeeType === "Intern") {
-            CreateIntern();
+const startApp = () => {
+    selectRole();
+};
+
+const addOrFinish = () => {
+    inquirer.prompt(firstQuiestion).then((answer) => {
+        if (answer.Add === 'Add Member') {
+            selectRole();
         } else {
-            console.log ('Stopped creating employee');
-            console.log ('---------');
-            render(teamMembers);
+            getFileName();
         }
     });
-}
-function CreateEngineer(){
-    const questions = [
-        {
-            type: 'input',
-            message: 'What is your Engineers name?',
-            name: 'name'
-        },
-        {
-            type: 'input',
-            message: 'What is your Engineer id?',
-            name: 'id'
-        },
-        {
-            type: 'input',
-            message: 'What is your Engineer github?',
-            name: 'github'
-        }
-    ];
-    inquirer.prompt(questions).then(function (res){
-        console.log(res);
-        const engineer = new Engineer(res.name,res.id,res.email,res.github);
-        teamMembers.push(engineer);
-        CreateEmployee();
-    });
-}
+};
 
-function CreateIntern(){
-    const questions = [
-        {
-            type: 'input',
-            message: 'What is Your Intern Name?',
-            name: 'name'
-        },
-        {
-            type: 'input',
-            message: 'What is your id?',
-            name: 'id'
-        },
-        {
-            type: 'input',
-            message: 'What is your email?',
-            name: 'email'
-        },
-        {
-            type: 'input',
-            message: 'What is your Intern school?',
-            name: 'school'
-        }
-    ];
-    inquirer.prompt(questions).then(function(res){
-        console.log(res);
-        const intern = new Intern(res.name,res.id,res.email,res.school);
-        teamMembers.push(intern);
-        createEmployee();
+const selectRole = () => {
+    inquirer.prompt(questions).then((answer) => {
+    roleQuestions(Questions[answer.role], answer.role);
     });
-}
+};
+const roleQuestions = (questions, role) => {
+    inquirer.prompt(questions).then((answer) => {
+        let member = {};
+        if (role === 'Manager'){
+            member = new Manager(
+                answer.name,
+                answer.id,
+                answer.email,
+                answer.officeNumber
+            );
+        } else if (role === 'Engineer') {
+            member = new Engineer(
+                answer.name,
+                answer.id,
+                answer.email,
+                answer.github,
+            );
+        } else if (role === 'Intern') {
+            member = new Intern(
+                answer.name,
+                answer.id,
+                answer.email,
+                answer.school,
+            );
+        }
+        teamMembers.push(member);
+        addOrFinish();
+    });
+};
+
+const generateTeam = (fileName) => {
+    const outputPath = path.join(OUTPUT_DIR, fileName + ".html");
+    if (!fs.existsSync(OUTPUT_DIR)) {
+        fs.mkdirSync(OUTPUT_DIR);
+    }
+    fs.writeFileSync(outputPath, render(teamMembers), (err) => {
+        if (err) {
+            console.log(err);
+            getFileName();
+        }
+    });
+};
+
+startApp();
+
+    
+        
 
 
 
